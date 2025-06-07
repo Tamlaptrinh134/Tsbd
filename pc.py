@@ -1,18 +1,23 @@
-from tkinter import * 
+import tkinter as tk
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.dialogs import Messagebox
+from datetime import datetime
+import time 
 Window_main = ttk.Window(themename="darkly")
 Window_main.title("Tsbd")
 Window_main.geometry("1000x800")
 class DataToCreate:
     def __init__(self):
+        self.this_year = datetime.now().year
         self.sbdwithname = {}
         self.table = []
         self.school = ""
         self.administrative = ""
         self.title_name = "SƠ ĐỒ ĐÁNH SỐ BÁO DANH"
+        self.school_year = f"{self.this_year} - {self.this_year + 1}"
+        self.day = ""
 class Commands:
     def List() -> None:
         def close_window():
@@ -92,8 +97,10 @@ class Commands:
         tab_list += [ttk.Frame(Notebook_preview, bootstyle=DARK)]
         tab_list[-1].pack(fill=BOTH, expand=True)
         Notebook_preview.add(tab_list[-1], text=f"{DataToCreate.school} - {DataToCreate.administrative}")
-
+def px_to_pt(px, dpi=96):
+    return int(px * 72 / dpi)
 def placeholder(Entry, text) -> None:
+    global list_empty_string
     def on_focus_in(event):
         if Entry.get() == text:
             Entry.delete(0, END)
@@ -105,6 +112,7 @@ def placeholder(Entry, text) -> None:
     if Entry.get() == "":
         Entry.config(foreground="grey")
         Entry.insert(0, text)
+    list_empty_string += [text]
     Entry.bind("<FocusIn>", on_focus_in)
     Entry.bind("<FocusOut>", on_focus_out)
 def check_spinbox(Spinweight):
@@ -165,7 +173,6 @@ def type_only_numbers(Spinweight):
 
     Spinweight.bind("<KeyRelease>", on_press)
     Spinweight.bind("<FocusOut>", on_focus_out)
-
 def on_combobox_type_thi_way(event) -> None:
     selected_way = Combobox_wayofarrange.get()
     if list_type_this_way[list_way_of_arrange[selected_way]]:
@@ -178,8 +185,8 @@ def on_combobox_type_thi_way(event) -> None:
         Button_arrange_manual.grid()
     else:
         Button_arrange_manual.grid_remove()
-def check_entry_empty(Entry):
-    if Entry.get() in ["", "Nhập lớp của bạn", "Nhập tên trường của bạn"]:
+def check_entry_empty(entry):
+    if entry.get() and entry.get() in list_empty_string:
         return False
     return True
 def on_check_all_have_type(event) -> None:
@@ -191,6 +198,7 @@ def on_check_all_have_type(event) -> None:
     data.school = Entry_school.get() if check_entry_empty(Entry_school) else "Không tên"
     data.administrative = Entry_administrative.get() if check_entry_empty(Entry_administrative) else "Không tên"
     data.title_name = Entry_title.get() if check_entry_empty(Entry_title) else "Không tiêu đề"
+    data.school_year = Entry_school_year.get() if check_entry_empty(Entry_school_year) else "? - ?"
     if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to):
         data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         #print(DataToCreate.table)
@@ -201,11 +209,11 @@ def on_check_all_have_type(event) -> None:
     Canvas_review.delete("all")
     canvas_width = Canvas_review.winfo_width()
     canvas_height = Canvas_review.winfo_height()
-    Canvas_review.create_text(110, 10, text=f"{data.administrative}", font=("Font", 9), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(110, 25, text=f"Trường {data.school}", font=("Font", 9, "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(310, 10, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Font", 8, "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(310, 25, text=f"Độc lập - Tự do - Hạnh phúc", font=("Font", 8, "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(canvas_width//2, 60, text=data.title_name, font=("Font", 10, "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(110, 15, text=f"{data.administrative}", font=("Font", px_to_pt(9)), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(110, 30, text=f"Trường {data.school}", font=("Font", px_to_pt(9), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(310, 15, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Font", px_to_pt(7), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(310, 30, text=f"Độc lập - Tự do - Hạnh phúc", font=("Font", px_to_pt(8), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 60, text=data.title_name, font=("Font", px_to_pt(10), "bold"), fill="#000000", anchor=CENTER)
 
 class Commands:
     def List() -> None:
@@ -288,7 +296,8 @@ class Commands:
         Notebook_preview.add(tab_list[-1], text=f"{data.school} - {data.administrative}")
 
 data = DataToCreate()
-Menubar = Menu(Window_main)
+list_empty_string = [""]
+Menubar = tk.Menu(Window_main)
 Menubar.add_cascade(label="File", menu=ttk.Menu(Menubar, tearoff=0))
 Menubar.add_cascade(label="Edit", menu=ttk.Menu(Menubar, tearoff=0))
 Menubar.add_cascade(label="View", menu=ttk.Menu(Menubar, tearoff=0))
@@ -320,6 +329,21 @@ Entry_title = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
 Entry_title.grid(row=2, column=1, padx=2, pady=2, sticky=W)
 Entry_title.insert(0, data.title_name)
 placeholder(Entry_title, "Nhập tiêu đề của bạn")
+
+Label_school_year = ttk.Label(Label_frame_title, text="Năm học:", bootstyle=INFO)
+Label_school_year.grid(row=3, column=0, padx=2, pady=2, sticky=W)
+
+Entry_school_year = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
+Entry_school_year.grid(row=3, column=1, padx=2, pady=2, sticky=W)
+Entry_school_year.insert(0, data.school_year)
+placeholder(Entry_school_year, "Nhập năm học")
+
+Label_day = ttk.Label(Label_frame_title, text="Ngày:", bootstyle=INFO)
+Label_day.grid(row=4, column=0, padx=2, pady=2, sticky=W)
+
+Entry_day = ttk.DateEntry(Label_frame_title, width=27, bootstyle=LIGHT)
+Entry_day.grid(row=4, column=1, padx=2, pady=2, sticky=W)
+placeholder(Entry_day.entry, "Nhập ngày")
 
 Label_frame_title.grid(row=0, column=0, padx=2, pady=2, sticky=W) 
 
@@ -401,7 +425,6 @@ list_type_this_way = {
     },
     "manual": None,
 }
-data = DataToCreate()
 Combobox_wayofarrange = ttk.Combobox(Label_frame_arrange, values=list(list_way_of_arrange.keys()), state="readonly", bootstyle=LIGHT)
 Combobox_wayofarrange.current(0)
 Combobox_wayofarrange.grid(row=0, column=1, padx=2, pady=2, sticky=W)
@@ -414,7 +437,7 @@ Combobox_typethiswayarrange = ttk.Combobox(Label_frame_arrange, values=[], state
 Combobox_typethiswayarrange.grid(row=1, column=1, padx=2, pady=2, sticky=W)
 
 Button_arrange_manual = ttk.Button(Label_frame_arrange, text="Thủ công >>", bootstyle=SUCCESS)
-Button_arrange_manual.grid(row=None, column=0, padx=2, pady=2, sticky=W)
+Button_arrange_manual.grid(row=999, column=0, padx=2, pady=2, sticky=W)
 Button_arrange_manual.grid_remove()
 on_combobox_type_thi_way(None)
 
@@ -439,7 +462,6 @@ Frame_run.grid(row=3, column=0, padx=2, pady=2, sticky=W)
 #sizegrip = ttk.Sizegrip(Sidebar)
 #sizegrip.grid(row=None, column=None, sticky="se")
 Sidebar.pack(side=LEFT, fill=Y)
-Sidebar.pack_propagate(False)
 
 tab_list = []
 Notebook_preview = ttk.Notebook(Window_main)
@@ -450,7 +472,7 @@ ScrolledFrame_review = ScrolledFrame(Frame_review_tab, bootstyle=DARK)
 
 Frame_canvas_review = ttk.Frame(ScrolledFrame_review, bootstyle=DARK)
 
-Canvas_review = Canvas(Frame_canvas_review, width=420, height=594)
+Canvas_review = tk.Canvas(Frame_canvas_review, width=420, height=594)
 canvas_width = Canvas_review.winfo_width()
 canvas_height = Canvas_review.winfo_height()
 Canvas_review.config(background="#f3f3f3")
