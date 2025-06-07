@@ -11,7 +11,7 @@ class DataToCreate:
         self.sbdwithname = {}
         self.table = []
         self.school = ""
-        self.class_name = ""
+        self.administrative = ""
         self.title_name = "SƠ ĐỒ ĐÁNH SỐ BÁO DANH"
 class Commands:
     def List() -> None:
@@ -26,7 +26,7 @@ class Commands:
             if Entry_name.get() == "":
                 Messagebox.show_error("Vui lòng nhập tên học sinh...", "Lỗi")
                 return
-            if Entry_name.get() in DataToCreate.sbdwithname.values():
+            if Entry_name.get() in data.sbdwithname.values():
                 Messagebox.show_error("Tên học sinh đã tồn tại...", "Lỗi")
                 return
             TreeView_list.insert("", "end", values=(Spinbox_SBD.get(), Entry_name.get()))
@@ -85,13 +85,13 @@ class Commands:
         for widget in Label_frame_info.winfo_children() + Label_frame_title.winfo_children() + Label_frame_arrange.winfo_children():
             widget.config(state=DISABLED)
         Button_run.config(state=DISABLED)
-        DataToCreate.school = Entry_school.get()
-        DataToCreate.class_name = Entry_class.get()
-        DataToCreate.sbdwithname = {} #Temp
-        DataToCreate.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
+        data.school = Entry_school.get()
+        data.administrative = Entry_administrative.get()
+        data.sbdwithname = {} #Temp
+        data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         tab_list += [ttk.Frame(Notebook_preview, bootstyle=DARK)]
         tab_list[-1].pack(fill=BOTH, expand=True)
-        Notebook_preview.add(tab_list[-1], text=f"{DataToCreate.school} - {DataToCreate.class_name}")
+        Notebook_preview.add(tab_list[-1], text=f"{DataToCreate.school} - {DataToCreate.administrative}")
 
 def placeholder(Entry, text) -> None:
     def on_focus_in(event):
@@ -102,9 +102,9 @@ def placeholder(Entry, text) -> None:
         if Entry.get() == "":
             Entry.insert(0, text)
             Entry.config(foreground="grey")
-
-    Entry.config(foreground="grey")
-    Entry.insert(0, text)
+    if Entry.get() == "":
+        Entry.config(foreground="grey")
+        Entry.insert(0, text)
     Entry.bind("<FocusIn>", on_focus_in)
     Entry.bind("<FocusOut>", on_focus_out)
 def check_spinbox(Spinweight):
@@ -189,7 +189,8 @@ def on_check_all_have_type(event) -> None:
         if isinstance(widget, (ttk.Spinbox, ttk.Entry, ttk.Combobox)) and check_entry_empty(widget):
             check = False
     data.school = Entry_school.get() if check_entry_empty(Entry_school) else "Không tên"
-    data.class_name = Entry_class.get() if check_entry_empty(Entry_class) else "Không tên"
+    data.administrative = Entry_administrative.get() if check_entry_empty(Entry_administrative) else "Không tên"
+    data.title_name = Entry_title.get() if check_entry_empty(Entry_title) else "Không tiêu đề"
     if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to):
         data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         #print(DataToCreate.table)
@@ -197,14 +198,14 @@ def on_check_all_have_type(event) -> None:
         Button_run.config(state=NORMAL, bootstyle=SUCCESS)
     else:
         Button_run.config(state=DISABLED, bootstyle=DANGER)
-    
     Canvas_review.delete("all")
     canvas_width = Canvas_review.winfo_width()
     canvas_height = Canvas_review.winfo_height()
-    Canvas_review.create_text(canvas_width//2, 25, text=f"Trường: {data.school}", font=("Font", 17), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(canvas_width//2, 50, text=f"Lớp: {data.class_name}", font=("Font", 15), fill="#000000", anchor=CENTER)
-    Canvas_review.create_line(50, 70, canvas_width - 50, 70, fill="#000000", width=1)
-    Canvas_review.create_text(canvas_width//2, 90, text=data.title_name, font=("Font", 12), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(110, 10, text=f"{data.administrative}", font=("Font", 9), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(110, 25, text=f"Trường {data.school}", font=("Font", 9, "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(310, 10, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Font", 8, "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(310, 25, text=f"Độc lập - Tự do - Hạnh phúc", font=("Font", 8, "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 60, text=data.title_name, font=("Font", 10, "bold"), fill="#000000", anchor=CENTER)
 
 class Commands:
     def List() -> None:
@@ -279,14 +280,14 @@ class Commands:
             widget.config(state=DISABLED)
         Button_run.config(state=DISABLED)
         data.school = Entry_school.get()
-        data.class_name = Entry_class.get()
+        data.class_name = Entry_administrative.get()
         data.sbdwithname = {} #Temp
         data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         tab_list += [ttk.Frame(Notebook_preview, bootstyle=DARK)]
         tab_list[-1].pack(fill=BOTH, expand=True)
-        Notebook_preview.add(tab_list[-1], text=f"{data.school} - {data.class_name}")
+        Notebook_preview.add(tab_list[-1], text=f"{data.school} - {data.administrative}")
 
-        
+data = DataToCreate()
 Menubar = Menu(Window_main)
 Menubar.add_cascade(label="File", menu=ttk.Menu(Menubar, tearoff=0))
 Menubar.add_cascade(label="Edit", menu=ttk.Menu(Menubar, tearoff=0))
@@ -298,19 +299,27 @@ Sidebar = ScrolledFrame(Window_main, width=320, bootstyle=DARK)
 
 Label_frame_title = ttk.Labelframe(Sidebar, text="Tiêu đề: ", bootstyle=INFO)
 
+Label_administrative = ttk.Label(Label_frame_title, text="Cơ quan hành chính:", bootstyle=INFO)
+Label_administrative.grid(row=0, column=0, padx=2, pady=2, sticky=W)
+
+Entry_administrative = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
+Entry_administrative.grid(row=0, column=1, padx=2, pady=2, sticky=W)
+placeholder(Entry_administrative, "Nhập tên cơ quan hành chính")
+
 Label_school = ttk.Label(Label_frame_title, text="Tên trường:", bootstyle=INFO)
-Label_school.grid(row=0, column=0, padx=2, pady=2, sticky=W)
+Label_school.grid(row=1, column=0, padx=2, pady=2, sticky=W)
 
 Entry_school = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
-Entry_school.grid(row=0, column=1, padx=2, pady=2, sticky=W)
+Entry_school.grid(row=1, column=1, padx=2, pady=2, sticky=W)
 placeholder(Entry_school, "Nhập tên trường của bạn")
 
-Label_class = ttk.Label(Label_frame_title, text="Lớp:", bootstyle=INFO)
-Label_class.grid(row=1, column=0, padx=2, pady=2, sticky=W)
+Label_title = ttk.Label(Label_frame_title, text="Tiêu đề:", bootstyle=INFO)
+Label_title.grid(row=2, column=0, padx=2, pady=2, sticky=W)
 
-Entry_class = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
-Entry_class.grid(row=1, column=1, padx=2, pady=2, sticky=W)
-placeholder(Entry_class, "Nhập lớp của bạn")
+Entry_title = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
+Entry_title.grid(row=2, column=1, padx=2, pady=2, sticky=W)
+Entry_title.insert(0, data.title_name)
+placeholder(Entry_title, "Nhập tiêu đề của bạn")
 
 Label_frame_title.grid(row=0, column=0, padx=2, pady=2, sticky=W) 
 
