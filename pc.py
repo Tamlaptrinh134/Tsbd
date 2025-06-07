@@ -18,6 +18,11 @@ class DataToCreate:
         self.title_name = "SƠ ĐỒ ĐÁNH SỐ BÁO DANH"
         self.school_year = f"{self.this_year} - {self.this_year + 1}"
         self.day = ""
+        self.size_of_box = 30
+        self.margin = [5, 5]
+        self.corridor_margin = [10, 5]
+        self.table_group_size = [2, 1]
+        self.table_group_auto = True
 class Commands:
     def List() -> None:
         def close_window():
@@ -97,8 +102,10 @@ class Commands:
         tab_list += [ttk.Frame(Notebook_preview, bootstyle=DARK)]
         tab_list[-1].pack(fill=BOTH, expand=True)
         Notebook_preview.add(tab_list[-1], text=f"{DataToCreate.school} - {DataToCreate.administrative}")
-def px_to_pt(px, dpi=96):
-    return int(px * 72 / dpi)
+def pt_to_px(pt):
+    dpi = Canvas_review.winfo_fpixels('1i')
+    size_px = int(pt * dpi / 72)
+    return size_px
 def placeholder(Entry, text) -> None:
     global list_empty_string
     def on_focus_in(event):
@@ -119,9 +126,10 @@ def check_spinbox(Spinweight):
     check = True
     if not Spinweight.get().isdigit():
         check = False
+        print("OH")
     else:
         if Spinweight.cget("from") <= int(Spinweight.get()) <= Spinweight.cget("to"):
-            if Spinweight.winfo_name() in ["sbdfrom", "sbdto"]:
+            if Spinweight.winfo_name() in ["sbdfrom", "sbdto", "sbdrow", "sbdcol"]:
                 if Spinbox_SBD_to.get() != "" and Spinbox_SBD_from.get() != "":
                     if int(Spinbox_SBD_to.get()) < int(Spinbox_SBD_from.get()):
                         check = False
@@ -143,7 +151,7 @@ def type_only_numbers(Spinweight):
         else:
             if Spinweight.cget("from") <= int(Spinweight.get()) <= Spinweight.cget("to"):
                 Spinweight.config(bootstyle=SUCCESS)
-                if Spinweight.winfo_name() in ["sbdfrom", "sbdto"]:
+                if Spinweight.winfo_name() in ["sbdfrom", "sbdto", "sbdrow", "sbdcol"]:
                     if Spinbox_SBD_to.get() != "" and Spinbox_SBD_from.get() != "":
                         if int(Spinbox_SBD_to.get()) < int(Spinbox_SBD_from.get()):
                             Spinweight.config(bootstyle=DANGER)
@@ -186,7 +194,7 @@ def on_combobox_type_thi_way(event) -> None:
     else:
         Button_arrange_manual.grid_remove()
 def check_entry_empty(entry):
-    if entry.get() and entry.get() in list_empty_string:
+    if entry.get() in list_empty_string:
         return False
     return True
 def on_check_all_have_type(event) -> None:
@@ -199,7 +207,8 @@ def on_check_all_have_type(event) -> None:
     data.administrative = Entry_administrative.get() if check_entry_empty(Entry_administrative) else "Không tên"
     data.title_name = Entry_title.get() if check_entry_empty(Entry_title) else "Không tiêu đề"
     data.school_year = Entry_school_year.get() if check_entry_empty(Entry_school_year) else "? - ?"
-    if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to):
+    data.day = Entry_day.entry.get() if check_entry_empty(Entry_day.entry) else "??/??/????"
+    if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col):
         data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         #print(DataToCreate.table)
     if check:
@@ -209,11 +218,67 @@ def on_check_all_have_type(event) -> None:
     Canvas_review.delete("all")
     canvas_width = Canvas_review.winfo_width()
     canvas_height = Canvas_review.winfo_height()
-    Canvas_review.create_text(110, 15, text=f"{data.administrative}", font=("Font", px_to_pt(9)), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(110, 30, text=f"Trường {data.school}", font=("Font", px_to_pt(9), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(310, 15, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Font", px_to_pt(7), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(310, 30, text=f"Độc lập - Tự do - Hạnh phúc", font=("Font", px_to_pt(8), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(canvas_width//2, 60, text=data.title_name, font=("Font", px_to_pt(10), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(100, 15, text=f"{data.administrative}", font=("Arial", pt_to_px(7)), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(100, 30, text=f"Trường {data.school}", font=("Arial", pt_to_px(7), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(300, 15, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Arial", pt_to_px(7), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(300, 30, text=f"Độc lập - Tự do - Hạnh phúc", font=("Arial", pt_to_px(7), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 55, text=data.title_name, font=("Arial", pt_to_px(8), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 70, text=f"NĂM HỌC: {data.school_year}", font=("Arial", pt_to_px(8), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 85, text=f"NGÀY: {data.day}", font=("Arial", pt_to_px(8), "bold"), fill="#000000", anchor=CENTER)
+    if data.table:
+        margin = list(data.margin)
+        num_rows = len(data.table)
+        num_cols = max(len(row) for row in data.table)
+
+        num_row_groups = (num_rows - 1) // data.table_group_size[1]
+        num_col_groups = (num_cols - 1) // data.table_group_size[0]
+
+        height = (
+            num_rows * data.size_of_box
+            + (num_rows - 1 - num_row_groups) * data.margin[1]
+            + num_row_groups * data.corridor_margin[1]
+        )
+
+        width = (
+            num_cols * data.size_of_box
+            + (num_cols - 1 - num_col_groups) * data.margin[0]
+            + num_col_groups * data.corridor_margin[0]
+        )
+
+        print(height, width)
+
+        position = [canvas_width // 2 - width // 2, 190]
+        table_group = [1, 1]
+        y = position[1]
+
+        for ir, row in enumerate(data.table):
+            if table_group[1] < data.table_group_size[1]:
+                margin_y = data.margin[1]
+                table_group[1] += 1
+            else:
+                margin_y = data.corridor_margin[1]
+                table_group[1] = 1
+
+            x = position[0]
+
+            for ic, col in enumerate(row):
+                # margin cột
+                if table_group[0] < data.table_group_size[0]:
+                    margin_x = data.margin[0]
+                    table_group[0] += 1
+                else:
+                    margin_x = data.corridor_margin[0]
+                    table_group[0] = 1
+
+                # Vẽ ô
+                Canvas_review.create_rectangle(
+                    x, y,
+                    x + data.size_of_box, y + data.size_of_box
+                )
+
+                x += data.size_of_box + margin_x
+
+            y += data.size_of_box + margin_y
 
 class Commands:
     def List() -> None:
@@ -308,7 +373,7 @@ Sidebar = ScrolledFrame(Window_main, width=320, bootstyle=DARK)
 
 Label_frame_title = ttk.Labelframe(Sidebar, text="Tiêu đề: ", bootstyle=INFO)
 
-Label_administrative = ttk.Label(Label_frame_title, text="Cơ quan hành chính:", bootstyle=INFO)
+Label_administrative = ttk.Label(Label_frame_title, text="CQHC:", bootstyle=INFO)
 Label_administrative.grid(row=0, column=0, padx=2, pady=2, sticky=W)
 
 Entry_administrative = ttk.Entry(Label_frame_title, width=27, bootstyle=LIGHT)
@@ -375,15 +440,15 @@ Button_SBDwithname.grid(row=1, column=1, columnspan = 3, padx=2, pady=2, sticky=
 Label_row = ttk.Label(Label_frame_info, text="Số hàng:", bootstyle=INFO)
 Label_row.grid(row=2, column=0, padx=2, pady=2, sticky=W)
 
-Spinbox_row = ttk.Spinbox(Label_frame_info, from_=1, to=1000, width=5, bootstyle=LIGHT)
-Spinbox_row.set(10)
+Spinbox_row = ttk.Spinbox(Label_frame_info, name="sbdrow", from_=1, to=1000, width=5, bootstyle=LIGHT)
+Spinbox_row.set(5)
 Spinbox_row.grid(row=2, column=1, padx=2, pady=2, sticky=W)
 type_only_numbers(Spinbox_row)
 
 Label_col = ttk.Label(Label_frame_info, text="Số cột:", bootstyle=INFO)
 Label_col.grid(row=3, column=0, padx=2, pady=2, sticky=W)
 
-Spinbox_col = ttk.Spinbox(Label_frame_info, from_=1, to=1000, width=5, bootstyle=LIGHT)
+Spinbox_col = ttk.Spinbox(Label_frame_info, name="sbdcol", from_=1, to=1000, width=5, bootstyle=LIGHT)
 Spinbox_col.set(8)
 Spinbox_col.grid(row=3, column=1, padx=2, pady=2, sticky=W)
 type_only_numbers(Spinbox_col)
