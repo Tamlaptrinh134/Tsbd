@@ -20,9 +20,10 @@ class DataToCreate:
         self.day = ""
         self.size_of_box = 30
         self.margin = [5, 5]
-        self.corridor_margin = [10, 5]
+        self.corridor_margin = [15, 5]
         self.table_group_size = [2, 1]
         self.table_group_auto = True
+        self.table_teacher = [0, 110, 100, 50]
 class Commands:
     def List() -> None:
         def close_window():
@@ -230,7 +231,7 @@ def on_check_all_have_type(event) -> None:
         num_rows = len(data.table)
         num_cols = max(len(row) for row in data.table)
 
-        num_row_groups = (num_rows - 1) // data.table_group_size[1]
+        num_row_groups = (num_rows - 1) // data.table_group_size[1] 
         num_col_groups = (num_cols - 1) // data.table_group_size[0]
 
         height = (
@@ -245,12 +246,9 @@ def on_check_all_have_type(event) -> None:
             + num_col_groups * data.corridor_margin[0]
         )
 
-        print(height, width)
-
         position = [canvas_width // 2 - width // 2, 190]
         table_group = [1, 1]
         y = position[1]
-
         for ir, row in enumerate(data.table):
             if table_group[1] < data.table_group_size[1]:
                 margin_y = data.margin[1]
@@ -258,27 +256,29 @@ def on_check_all_have_type(event) -> None:
             else:
                 margin_y = data.corridor_margin[1]
                 table_group[1] = 1
-
             x = position[0]
-
             for ic, col in enumerate(row):
-                # margin cột
                 if table_group[0] < data.table_group_size[0]:
                     margin_x = data.margin[0]
                     table_group[0] += 1
                 else:
                     margin_x = data.corridor_margin[0]
                     table_group[0] = 1
-
-                # Vẽ ô
                 Canvas_review.create_rectangle(
                     x, y,
                     x + data.size_of_box, y + data.size_of_box
                 )
 
                 x += data.size_of_box + margin_x
-
+            table_group[0] = 1
             y += data.size_of_box + margin_y
+    data.table_teacher[0] = position[0]
+    Canvas_review.create_rectangle(
+        data.table_teacher[0],
+        data.table_teacher[1],
+        data.table_teacher[0] + data.table_teacher[2],
+        data.table_teacher[1] + data.table_teacher[3]
+    )
 
 class Commands:
     def List() -> None:
