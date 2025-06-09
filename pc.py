@@ -8,22 +8,47 @@ import time
 Window_main = ttk.Window(themename="darkly")
 Window_main.title("Tsbd")
 Window_main.geometry("1000x800")
+TOPRIGHTE = "toprighte"
+TOPLEFTE = "toplefte"
+BOTTOMRIGHTE = "bottomrighte"
+BOTTOMLEFTE = "bottomlefte"
 class DataToCreate:
     def __init__(self):
         self.this_year = datetime.now().year
         self.sbdwithname = {}
-        self.table = []
+        self.table = {
+            "data": [],
+            "position": [None, 190]
+        }
         self.school = ""
         self.administrative = ""
         self.title_name = "SƠ ĐỒ ĐÁNH SỐ BÁO DANH"
         self.school_year = f"{self.this_year} - {self.this_year + 1}"
         self.day = ""
+        self.sbd_from = 1
+        self.sbd_to = 40
         self.size_of_box = 30
         self.margin = [5, 5]
         self.corridor_margin = [15, 5]
-        self.table_group_size = [2, 1]
-        self.table_group_auto = True
-        self.table_teacher = [0, 110, 100, 50]
+        self.table_group = {
+            "size": [2, 1],
+            "auto": True
+        }
+        self.table_teacher = {
+            "position": [None, 110, 100, 50]
+        }
+        self.entrance = {
+            "type": ["⬅", "➡"],
+            "size": 40,
+            "anchor": [E, W],
+            "position": [None, 150]
+        }
+        self.top_class = {
+            "position": [None, 110, None, self.table_teacher["position"][3]],
+            "type": [TOPRIGHTE, TOPLEFTE, BOTTOMRIGHTE, BOTTOMLEFTE]
+        }
+        self.way_of_arrange = ""
+        self.type_this_way = ""
 class Commands:
     def List() -> None:
         def close_window():
@@ -103,10 +128,10 @@ class Commands:
         tab_list += [ttk.Frame(Notebook_preview, bootstyle=DARK)]
         tab_list[-1].pack(fill=BOTH, expand=True)
         Notebook_preview.add(tab_list[-1], text=f"{DataToCreate.school} - {DataToCreate.administrative}")
-def pt_to_px(pt):
+def px_to_pt(px):
     dpi = Canvas_review.winfo_fpixels('1i')
-    size_px = int(pt * dpi / 72)
-    return size_px
+    pt = px * (72 / dpi)
+    return round(pt)
 def placeholder(Entry, text) -> None:
     global list_empty_string
     def on_focus_in(event):
@@ -198,19 +223,62 @@ def check_entry_empty(entry):
     if entry.get() in list_empty_string:
         return False
     return True
+def calculator():
+    global data
+    match list_way_of_arrange[data.way_of_arrange]:
+        case "even_odd":
+            match list_type_this_way["even_odd"][data.type_this_way]:
+                case "even_first":
+                    temp = data.table["data"][:]
+                    index = data.sbd_from
+                    for ir, row in enumerate(data.table["data"]):
+                        for ic, col in enumerate(row):
+                            if index > data.sbd_to:
+                                break
+                            temp[ir][ic] = index
+                            index += 1
+                    data.table["data"] = temp[:]
+                    data1d = []
+                    ldata1d = 0
+                    for i in data.table["data"]:
+                        for y in i:
+                            if y != "Ô trống":
+                                data1d += [y]
+                                ldata1d += 1
+                    #print(ldata1d)
+                    evendata = list(filter(lambda x: x%2==0 or x==0, data1d))
+                    odddata = list(filter(lambda x: x%2!=0 and x!=0, data1d))
+                    data1d = evendata + odddata + ["Ô trống" for _ in range(ldata1d - len(evendata + odddata))]
+                    temp = data.table["data"][:]
+                    index = 0
+                    for ir, row in enumerate(data.table["data"]):
+                        for ic, col in enumerate(row):
+                            #print(index)
+                            if index <= len(data1d) - 1:
+                                temp[ir][ic] = data1d[index]
+                            index += 1
+                    data.table["data"] = temp[:]
+                    del data1d
+
+                            
+
 def on_check_all_have_type(event) -> None:
     check = True
     global canvas_width, canvas_height, data
     for widget in Label_frame_info.winfo_children() + Label_frame_title.winfo_children() + Label_frame_arrange.winfo_children():
         if isinstance(widget, (ttk.Spinbox, ttk.Entry, ttk.Combobox)) and check_entry_empty(widget):
             check = False
-    data.school = Entry_school.get() if check_entry_empty(Entry_school) else "Không tên"
+    data.school = Entry_school.get() if check_entry_empty(Entry_school) else "Trường không tên"
     data.administrative = Entry_administrative.get() if check_entry_empty(Entry_administrative) else "Không tên"
     data.title_name = Entry_title.get() if check_entry_empty(Entry_title) else "Không tiêu đề"
     data.school_year = Entry_school_year.get() if check_entry_empty(Entry_school_year) else "? - ?"
     data.day = Entry_day.entry.get() if check_entry_empty(Entry_day.entry) else "??/??/????"
+    data.way_of_arrange = Combobox_wayofarrange.get()
+    data.type_this_way = Combobox_typethiswayarrange.get()
     if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col):
-        data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
+        data.table["data"] = [["Ô trống" for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
+        data.sbd_from = int(Spinbox_SBD_from.get())
+        data.sbd_to = int(Spinbox_SBD_to.get())
         #print(DataToCreate.table)
     if check:
         Button_run.config(state=NORMAL, bootstyle=SUCCESS)
@@ -219,20 +287,21 @@ def on_check_all_have_type(event) -> None:
     Canvas_review.delete("all")
     canvas_width = Canvas_review.winfo_width()
     canvas_height = Canvas_review.winfo_height()
-    Canvas_review.create_text(100, 15, text=f"{data.administrative}", font=("Arial", pt_to_px(7)), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(100, 30, text=f"Trường {data.school}", font=("Arial", pt_to_px(7), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(300, 15, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Arial", pt_to_px(7), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(300, 30, text=f"Độc lập - Tự do - Hạnh phúc", font=("Arial", pt_to_px(7), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(canvas_width//2, 55, text=data.title_name, font=("Arial", pt_to_px(8), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(canvas_width//2, 70, text=f"NĂM HỌC: {data.school_year}", font=("Arial", pt_to_px(8), "bold"), fill="#000000", anchor=CENTER)
-    Canvas_review.create_text(canvas_width//2, 85, text=f"NGÀY: {data.day}", font=("Arial", pt_to_px(8), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(100, 15, text=f"{data.administrative}", font=("Arial", px_to_pt(12)), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(100, 30, text=f"{data.school}", font=("Arial", px_to_pt(12), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(300, 15, text=f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", font=("Arial", px_to_pt(12), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(300, 30, text=f"Độc lập - Tự do - Hạnh phúc", font=("Arial", px_to_pt(12), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 55, text=data.title_name, font=("Arial", px_to_pt(13), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 70, text=f"NĂM HỌC: {data.school_year}", font=("Arial", px_to_pt(13), "bold"), fill="#000000", anchor=CENTER)
+    Canvas_review.create_text(canvas_width//2, 85, text=f"NGÀY: {data.day}", font=("Arial", px_to_pt(13), "bold"), fill="#000000", anchor=CENTER)
+    calculator()
     if data.table:
         margin = list(data.margin)
-        num_rows = len(data.table)
-        num_cols = max(len(row) for row in data.table)
+        num_rows = len(data.table["data"])
+        num_cols = max(len(row) for row in data.table["data"])
 
-        num_row_groups = (num_rows - 1) // data.table_group_size[1] 
-        num_col_groups = (num_cols - 1) // data.table_group_size[0]
+        num_row_groups = (num_rows - 1) // data.table_group["size"][1] 
+        num_col_groups = (num_cols - 1) // data.table_group["size"][0]
 
         height = (
             num_rows * data.size_of_box
@@ -245,12 +314,12 @@ def on_check_all_have_type(event) -> None:
             + (num_cols - 1 - num_col_groups) * data.margin[0]
             + num_col_groups * data.corridor_margin[0]
         )
-
-        position = [canvas_width // 2 - width // 2, 190]
+        data.table["position"][0] = canvas_width // 2 - width // 2
+        position = data.table["position"]
         table_group = [1, 1]
         y = position[1]
-        for ir, row in enumerate(data.table):
-            if table_group[1] < data.table_group_size[1]:
+        for ir, row in enumerate(data.table["data"]):
+            if table_group[1] < data.table_group["size"][1]:
                 margin_y = data.margin[1]
                 table_group[1] += 1
             else:
@@ -258,7 +327,7 @@ def on_check_all_have_type(event) -> None:
                 table_group[1] = 1
             x = position[0]
             for ic, col in enumerate(row):
-                if table_group[0] < data.table_group_size[0]:
+                if table_group[0] < data.table_group["size"][0]:
                     margin_x = data.margin[0]
                     table_group[0] += 1
                 else:
@@ -268,16 +337,45 @@ def on_check_all_have_type(event) -> None:
                     x, y,
                     x + data.size_of_box, y + data.size_of_box
                 )
-
+                if col != "Ô trống":
+                    Canvas_review.create_text(
+                        x + data.size_of_box//2,
+                        y + data.size_of_box//2,
+                        text=f"{col}",
+                        font=("Arial", px_to_pt(9)),
+                        anchor=CENTER
+                    )
                 x += data.size_of_box + margin_x
             table_group[0] = 1
             y += data.size_of_box + margin_y
-    data.table_teacher[0] = position[0]
+    data.table_teacher["position"][0] = position[0]
     Canvas_review.create_rectangle(
-        data.table_teacher[0],
-        data.table_teacher[1],
-        data.table_teacher[0] + data.table_teacher[2],
-        data.table_teacher[1] + data.table_teacher[3]
+        data.table_teacher["position"][0],
+        data.table_teacher["position"][1],
+        data.table_teacher["position"][0] + data.table_teacher["position"][2],
+        data.table_teacher["position"][1] + data.table_teacher["position"][3]
+    )
+    Canvas_review.create_text(
+        data.table_teacher["position"][0] + data.table_teacher["position"][2]//2,
+        data.table_teacher["position"][1] + data.table_teacher["position"][2]//3 - 6,
+        text="BÀN GIÁO VIÊN", 
+        font=("Arial", px_to_pt(12), "bold"),
+        anchor=CENTER
+    )
+    data.entrance["position"][0] = position[0] + width
+    Canvas_review.create_text(
+        data.entrance["position"][0],
+        data.entrance["position"][1],
+        text=data.entrance["type"][0],
+        font=("Arial", px_to_pt(data.entrance["size"])),
+        anchor=data.entrance["anchor"][0]
+    )
+    Canvas_review.create_text(
+        data.entrance["position"][0],
+        data.entrance["position"][1] - 27,
+        text="LỐI VÀO", 
+        font=("Arial", px_to_pt(12), "bold"),
+        anchor=data.entrance["anchor"][0]
     )
 
 class Commands:
@@ -353,7 +451,7 @@ class Commands:
             widget.config(state=DISABLED)
         Button_run.config(state=DISABLED)
         data.school = Entry_school.get()
-        data.class_name = Entry_administrative.get()
+        data.administrative = Entry_administrative.get()
         data.sbdwithname = {} #Temp
         data.table = [[True for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         tab_list += [ttk.Frame(Notebook_preview, bootstyle=DARK)]
