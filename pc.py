@@ -207,7 +207,7 @@ def type_only_numbers(Spinweight):
 
     Spinweight.bind("<KeyRelease>", on_press)
     Spinweight.bind("<FocusOut>", on_focus_out)
-def on_combobox_type_thi_way(event) -> None:
+def on_combobox_way_of_arrange(event) -> None:
     selected_way = Combobox_wayofarrange.get()
     if list_type_this_way[list_way_of_arrange[selected_way]]:
         Combobox_typethiswayarrange.config(values=list(list_type_this_way[list_way_of_arrange[selected_way]].keys()), state=READONLY)
@@ -223,31 +223,31 @@ def check_entry_empty(entry):
     if entry.get() in list_empty_string:
         return False
     return True
-def calculator():
+def calculator(event=None):
     global data
     match list_way_of_arrange[data.way_of_arrange]:
         case "even_odd":
+            temp = data.table["data"][:]
+            index = data.sbd_from
+            for ir, row in enumerate(data.table["data"]):
+                for ic, col in enumerate(row):
+                    if index > data.sbd_to:
+                        break
+                    temp[ir][ic] = index
+                    index += 1
+            data.table["data"] = temp[:]
+            data1d = []
+            ldata1d = 0
+            for i in data.table["data"]:
+                for y in i:
+                    if y != "Ô trống":
+                        data1d += [y]
+                        ldata1d += 1
+            #print(ldata1d)
+            evendata = list(filter(lambda x: x%2==0 or x==0, data1d))
+            odddata = list(filter(lambda x: x%2!=0 and x!=0, data1d))
             match list_type_this_way["even_odd"][data.type_this_way]:
                 case "even_first":
-                    temp = data.table["data"][:]
-                    index = data.sbd_from
-                    for ir, row in enumerate(data.table["data"]):
-                        for ic, col in enumerate(row):
-                            if index > data.sbd_to:
-                                break
-                            temp[ir][ic] = index
-                            index += 1
-                    data.table["data"] = temp[:]
-                    data1d = []
-                    ldata1d = 0
-                    for i in data.table["data"]:
-                        for y in i:
-                            if y != "Ô trống":
-                                data1d += [y]
-                                ldata1d += 1
-                    #print(ldata1d)
-                    evendata = list(filter(lambda x: x%2==0 or x==0, data1d))
-                    odddata = list(filter(lambda x: x%2!=0 and x!=0, data1d))
                     data1d = evendata + odddata + ["Ô trống" for _ in range(ldata1d - len(evendata + odddata))]
                     temp = data.table["data"][:]
                     index = 0
@@ -259,31 +259,20 @@ def calculator():
                             index += 1
                     data.table["data"] = temp[:]
                     del data1d
-
-                            
-
-def on_check_all_have_type(event) -> None:
-    check = True
-    global canvas_width, canvas_height, data
-    for widget in Label_frame_info.winfo_children() + Label_frame_title.winfo_children() + Label_frame_arrange.winfo_children():
-        if isinstance(widget, (ttk.Spinbox, ttk.Entry, ttk.Combobox)) and check_entry_empty(widget):
-            check = False
-    data.school = Entry_school.get() if check_entry_empty(Entry_school) else "Trường không tên"
-    data.administrative = Entry_administrative.get() if check_entry_empty(Entry_administrative) else "Không tên"
-    data.title_name = Entry_title.get() if check_entry_empty(Entry_title) else "Không tiêu đề"
-    data.school_year = Entry_school_year.get() if check_entry_empty(Entry_school_year) else "? - ?"
-    data.day = Entry_day.entry.get() if check_entry_empty(Entry_day.entry) else "??/??/????"
-    data.way_of_arrange = Combobox_wayofarrange.get()
-    data.type_this_way = Combobox_typethiswayarrange.get()
-    if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col):
-        data.table["data"] = [["Ô trống" for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
-        data.sbd_from = int(Spinbox_SBD_from.get())
-        data.sbd_to = int(Spinbox_SBD_to.get())
-        #print(DataToCreate.table)
-    if check:
-        Button_run.config(state=NORMAL, bootstyle=SUCCESS)
-    else:
-        Button_run.config(state=DISABLED, bootstyle=DANGER)
+                case "odd_first":
+                    data1d = odddata + evendata + ["Ô trống" for _ in range(ldata1d - len(odddata + evendata))]
+                    temp = data.table["data"][:]
+                    index = 0
+                    for ir, row in enumerate(data.table["data"]):
+                        for ic, col in enumerate(row):
+                            #print(index)
+                            if index <= len(data1d) - 1:
+                                temp[ir][ic] = data1d[index]
+                            index += 1
+                    data.table["data"] = temp[:]
+                    del data1d
+def draw() -> None:
+    global data
     Canvas_review.delete("all")
     canvas_width = Canvas_review.winfo_width()
     canvas_height = Canvas_review.winfo_height()
@@ -378,6 +367,32 @@ def on_check_all_have_type(event) -> None:
         anchor=data.entrance["anchor"][0]
     )
 
+def on_check_all_have_type(event=None) -> None:
+    check = True
+    global canvas_width, canvas_height, data
+    for widget in Label_frame_info.winfo_children() + Label_frame_title.winfo_children() + Label_frame_arrange.winfo_children():
+        if isinstance(widget, (ttk.Spinbox, ttk.Entry, ttk.Combobox)) and check_entry_empty(widget):
+            check = False
+    data.school = Entry_school.get() if check_entry_empty(Entry_school) else "Trường không tên"
+    data.administrative = Entry_administrative.get() if check_entry_empty(Entry_administrative) else "Không tên"
+    data.title_name = Entry_title.get() if check_entry_empty(Entry_title) else "Không tiêu đề"
+    data.school_year = Entry_school_year.get() if check_entry_empty(Entry_school_year) else "? - ?"
+    data.day = Entry_day.entry.get() if check_entry_empty(Entry_day.entry) else "??/??/????"
+    data.way_of_arrange = Combobox_wayofarrange.get()
+    data.type_this_way = Combobox_typethiswayarrange.get()
+    if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col):
+        data.table["data"] = [["Ô trống" for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
+        data.sbd_from = int(Spinbox_SBD_from.get())
+        data.sbd_to = int(Spinbox_SBD_to.get())
+        #print(DataToCreate.table)
+    if check:
+        Button_run.config(state=NORMAL, bootstyle=SUCCESS)
+    else:
+        Button_run.config(state=DISABLED, bootstyle=DANGER)
+    draw()
+def on_combobox_type_this_way(event=None) -> None:
+    data.type_this_way = Combobox_typethiswayarrange.get()
+    draw()
 class Commands:
     def List() -> None:
         def close_window():
@@ -468,6 +483,8 @@ Menubar.add_cascade(label="Help", menu=ttk.Menu(Menubar, tearoff=0))
 Window_main.config(menu=Menubar)
 
 Sidebar = ScrolledFrame(Window_main, width=320, bootstyle=DARK)
+
+
 
 Label_frame_title = ttk.Labelframe(Sidebar, text="Tiêu đề: ", bootstyle=INFO)
 
@@ -591,18 +608,20 @@ list_type_this_way = {
 Combobox_wayofarrange = ttk.Combobox(Label_frame_arrange, values=list(list_way_of_arrange.keys()), state="readonly", bootstyle=LIGHT)
 Combobox_wayofarrange.current(0)
 Combobox_wayofarrange.grid(row=0, column=1, padx=2, pady=2, sticky=W)
-Combobox_wayofarrange.bind("<<ComboboxSelected>>", on_combobox_type_thi_way)
+Combobox_wayofarrange.bind("<<ComboboxSelected>>", on_combobox_way_of_arrange)
+Combobox_wayofarrange.bind("<<ComboboxSelected>>", on_combobox_type_this_way, add="+")
 
 Label_typethiswayarrange = ttk.Label(Label_frame_arrange, text="Kiểu sắp xếp:", bootstyle=INFO)
 Label_typethiswayarrange.grid(row=1, column=0, padx=2, pady=2, sticky=W)
 
 Combobox_typethiswayarrange = ttk.Combobox(Label_frame_arrange, values=[], state="readonly", bootstyle=LIGHT)
 Combobox_typethiswayarrange.grid(row=1, column=1, padx=2, pady=2, sticky=W)
+Combobox_typethiswayarrange.bind("<<ComboboxSelected>>", on_combobox_type_this_way)
 
 Button_arrange_manual = ttk.Button(Label_frame_arrange, text="Thủ công >>", bootstyle=SUCCESS)
 Button_arrange_manual.grid(row=999, column=0, padx=2, pady=2, sticky=W)
 Button_arrange_manual.grid_remove()
-on_combobox_type_thi_way(None)
+on_combobox_way_of_arrange(None)
 
 Label_distance = ttk.Label(Label_frame_arrange, text="Khoảng cách:", bootstyle=INFO)
 Label_distance.grid(row=2, column=0, padx=2, pady=2, sticky=W)
