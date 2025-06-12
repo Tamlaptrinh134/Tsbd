@@ -28,6 +28,7 @@ class DataToCreate:
         self.sbd_from = 1
         self.sbd_to = 40
         self.size_of_box = 30
+        self.distance = 0
         self.margin = [5, 5]
         self.corridor_margin = [15, 5]
         self.table_group = {
@@ -165,6 +166,10 @@ def check_spinbox(Spinweight):
                 if Spinweight.get() != "":
                     if int(Spinweight.get()) < int(Spinbox_SBD_from.get()) or int(Spinweight.get()) > int(Spinbox_SBD_to.get()):
                         check = False
+            elif Spinweight.winfo_name() == "distance":
+                if Spinweight.get() != "":
+                    if int(Spinbox_col.get()) * int(Spinbox_row.get()) / (int(Spinweight.get()) + 1) < (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1):
+                        check = False
         else:
             check = False
     return check
@@ -194,6 +199,13 @@ def type_only_numbers(Spinweight):
                             check = False
                         else:
                             Spinweight.config(bootstyle=SUCCESS)
+                elif Spinweight.winfo_name() == "distance":
+                    if Spinweight.get() != "":
+                        if int(Spinbox_col.get()) * int(Spinbox_row.get()) / (int(Spinweight.get()) + 1) < (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1):
+                            Spinweight.config(bootstyle=DANGER)
+                            check = False
+                    else:
+                        Spinweight.config(bootstyle=SUCCESS)
             else:
                 Spinweight.config(bootstyle=DANGER)
                 check = False
@@ -380,10 +392,11 @@ def on_check_all_have_type(event=None) -> None:
     data.day = Entry_day.entry.get() if check_entry_empty(Entry_day.entry) else "??/??/????"
     data.way_of_arrange = Combobox_wayofarrange.get()
     data.type_this_way = Combobox_typethiswayarrange.get()
-    if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col):
+    if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col) and check_spinbox(Spinbox_distance):
         data.table["data"] = [["Ô trống" for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
         data.sbd_from = int(Spinbox_SBD_from.get())
         data.sbd_to = int(Spinbox_SBD_to.get())
+        data.distance = int(Spinbox_distance.get())
         #print(DataToCreate.table)
     if check:
         Button_run.config(state=NORMAL, bootstyle=SUCCESS)
@@ -482,7 +495,7 @@ Menubar.add_cascade(label="View", menu=ttk.Menu(Menubar, tearoff=0))
 Menubar.add_cascade(label="Help", menu=ttk.Menu(Menubar, tearoff=0))
 Window_main.config(menu=Menubar)
 
-Sidebar = ScrolledFrame(Window_main, width=320, bootstyle=DARK)
+Sidebar = ScrolledFrame(Window_main, width=500, bootstyle=DARK)
 
 
 
@@ -626,7 +639,7 @@ on_combobox_way_of_arrange(None)
 Label_distance = ttk.Label(Label_frame_arrange, text="Khoảng cách:", bootstyle=INFO)
 Label_distance.grid(row=2, column=0, padx=2, pady=2, sticky=W)
 
-Spinbox_distance = ttk.Spinbox(Label_frame_arrange, from_=0, to=10, width=5, bootstyle=LIGHT)
+Spinbox_distance = ttk.Spinbox(Label_frame_arrange, name="distance", from_=0, to=10, width=5, bootstyle=LIGHT)
 Spinbox_distance.set(0)
 Spinbox_distance.grid(row=2, column=1, padx=2, pady=2, sticky=W)
 type_only_numbers(Spinbox_distance)
