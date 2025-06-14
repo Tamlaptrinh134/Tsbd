@@ -12,13 +12,18 @@ TOPRIGHTE = "toprighte"
 TOPLEFTE = "toplefte"
 BOTTOMRIGHTE = "bottomrighte"
 BOTTOMLEFTE = "bottomlefte"
+NOTTHING = "Ô trống"
+LOCK = "Khóa"
 class DataToCreate:
     def __init__(self):
         self.this_year = datetime.now().year
         self.sbdwithname = {}
         self.table = {
             "data": [],
-            "position": [None, 190]
+            "lockdata": [],
+            "position": [None, 190],
+            "col": None,
+            "row": None
         }
         self.school = ""
         self.administrative = ""
@@ -160,15 +165,15 @@ def check_spinbox(Spinweight):
                 if Spinbox_SBD_to.get() != "" and Spinbox_SBD_from.get() != "":
                     if int(Spinbox_SBD_to.get()) < int(Spinbox_SBD_from.get()):
                         check = False
-                    elif (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1) > (int(Spinbox_row.get()) * int(Spinbox_col.get())):
+                    elif (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1) > (int(Spinbox_row.get()) * int(Spinbox_col.get()) - len(data.table["lockdata"])):
+                        check = False
+            elif Spinweight.winfo_name() == "distance":
+                if Spinweight.get() != "":
+                    if int(Spinbox_col.get()) * int(Spinbox_row.get()) / (int(Spinweight.get()) + 1) - len(data.table["lockdata"]) < (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1):
                         check = False
             elif Spinweight.winfo_name() == "sbd":
                 if Spinweight.get() != "":
                     if int(Spinweight.get()) < int(Spinbox_SBD_from.get()) or int(Spinweight.get()) > int(Spinbox_SBD_to.get()):
-                        check = False
-            elif Spinweight.winfo_name() == "distance":
-                if Spinweight.get() != "":
-                    if int(Spinbox_col.get()) * int(Spinbox_row.get()) / (int(Spinweight.get()) + 1) < (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1):
                         check = False
         else:
             check = False
@@ -187,7 +192,14 @@ def type_only_numbers(Spinweight):
                         if int(Spinbox_SBD_to.get()) < int(Spinbox_SBD_from.get()):
                             Spinweight.config(bootstyle=DANGER)
                             check = False
-                        elif (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1) > (int(Spinbox_row.get()) * int(Spinbox_col.get())):
+                        elif (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1) > (int(Spinbox_row.get()) * int(Spinbox_col.get()) - len(data.table["lockdata"])):
+                            Spinweight.config(bootstyle=DANGER)
+                            check = False
+                        else:
+                            Spinweight.config(bootstyle=SUCCESS)
+                elif Spinweight.winfo_name() == "distance":
+                    if Spinweight.get() != "":
+                        if int(Spinbox_col.get()) * int(Spinbox_row.get()) / (int(Spinweight.get()) + 1) - len(data.table["lockdata"]) < (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1):
                             Spinweight.config(bootstyle=DANGER)
                             check = False
                         else:
@@ -199,13 +211,6 @@ def type_only_numbers(Spinweight):
                             check = False
                         else:
                             Spinweight.config(bootstyle=SUCCESS)
-                elif Spinweight.winfo_name() == "distance":
-                    if Spinweight.get() != "":
-                        if int(Spinbox_col.get()) * int(Spinbox_row.get()) / (int(Spinweight.get()) + 1) < (int(Spinbox_SBD_to.get()) - int(Spinbox_SBD_from.get()) + 1):
-                            Spinweight.config(bootstyle=DANGER)
-                            check = False
-                    else:
-                        Spinweight.config(bootstyle=SUCCESS)
             else:
                 Spinweight.config(bootstyle=DANGER)
                 check = False
@@ -217,7 +222,9 @@ def type_only_numbers(Spinweight):
                 Spinweight.insert(0, Spinbox_SBD_from.get())
         Spinweight.config(bootstyle=LIGHT)
 
+    Spinweight.bind("<MouseWheel>", on_press)
     Spinweight.bind("<KeyRelease>", on_press)
+    Spinweight.bind("<ButtonRelease-1>", on_press)
     Spinweight.bind("<FocusOut>", on_focus_out)
 def on_combobox_way_of_arrange(event) -> None:
     selected_way = Combobox_wayofarrange.get()
@@ -239,50 +246,36 @@ def calculator(event=None):
     global data
     match list_way_of_arrange[data.way_of_arrange]:
         case "even_odd":
-            temp = data.table["data"][:]
-            index = data.sbd_from
-            for ir, row in enumerate(data.table["data"]):
-                for ic, col in enumerate(row):
-                    if index > data.sbd_to:
-                        break
-                    temp[ir][ic] = index
-                    index += 1
-            data.table["data"] = temp[:]
+            ldata1d = data.table["row"] * data.table["col"]
             data1d = []
-            ldata1d = 0
-            for i in data.table["data"]:
-                for y in i:
-                    if y != "Ô trống":
-                        data1d += [y]
-                        ldata1d += 1
-            #print(ldata1d)
-            evendata = list(filter(lambda x: x%2==0 or x==0, data1d))
-            odddata = list(filter(lambda x: x%2!=0 and x!=0, data1d))
+            lsbd = [i for i in range(data.sbd_from, data.sbd_to + 1)]
+            lsbdeven = list(filter(lambda x: x % 2 == 0 or x == 0, lsbd))
+            lsbdodd = list(filter(lambda x: x % 2 != 0 and x != 0, lsbd)) 
             match list_type_this_way["even_odd"][data.type_this_way]:
                 case "even_first":
-                    data1d = evendata + odddata + ["Ô trống" for _ in range(ldata1d - len(evendata + odddata))]
-                    temp = data.table["data"][:]
-                    index = 0
-                    for ir, row in enumerate(data.table["data"]):
-                        for ic, col in enumerate(row):
-                            #print(index)
-                            if index <= len(data1d) - 1:
-                                temp[ir][ic] = data1d[index]
-                            index += 1
-                    data.table["data"] = temp[:]
-                    del data1d
+                    lsbd = lsbdeven + lsbdodd
                 case "odd_first":
-                    data1d = odddata + evendata + ["Ô trống" for _ in range(ldata1d - len(odddata + evendata))]
-                    temp = data.table["data"][:]
-                    index = 0
-                    for ir, row in enumerate(data.table["data"]):
-                        for ic, col in enumerate(row):
-                            #print(index)
-                            if index <= len(data1d) - 1:
-                                temp[ir][ic] = data1d[index]
-                            index += 1
-                    data.table["data"] = temp[:]
-                    del data1d
+                    lsbd = lsbdodd + lsbdeven
+            index2 = 0
+            for index in range(ldata1d):
+                if index % (data.distance + 1) != 0:
+                    data1d += [NOTTHING]
+                else:
+                    try: 
+                        lsbd[index2]
+                        data1d += [lsbd[index2]]
+                        index2 += 1
+                    except IndexError: data1d += [NOTTHING]
+            temp = data.table["data"][:]
+            index = 0
+            for indexr, row in enumerate(data.table["data"]):
+                for indexc, col in enumerate(row):
+                    if [indexr, indexc] not in data.table["lockdata"]:
+                        temp[indexr][indexc] = data1d[index]
+                        index += 1
+                    else:
+                        temp[indexr][indexc] = LOCK
+            data.table["data"] = temp[:]
 def draw() -> None:
     global data
     Canvas_review.delete("all")
@@ -338,7 +331,7 @@ def draw() -> None:
                     x, y,
                     x + data.size_of_box, y + data.size_of_box
                 )
-                if col != "Ô trống":
+                if col != NOTTHING:
                     Canvas_review.create_text(
                         x + data.size_of_box//2,
                         y + data.size_of_box//2,
@@ -393,10 +386,13 @@ def on_check_all_have_type(event=None) -> None:
     data.way_of_arrange = Combobox_wayofarrange.get()
     data.type_this_way = Combobox_typethiswayarrange.get()
     if check_spinbox(Spinbox_SBD_from) and check_spinbox(Spinbox_SBD_to) and check_spinbox(Spinbox_row) and check_spinbox(Spinbox_col) and check_spinbox(Spinbox_distance):
-        data.table["data"] = [["Ô trống" for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
+        data.table["data"] = [[NOTTHING for _ in range(int(Spinbox_col.get()))] for _ in range(int(Spinbox_row.get()))]
+        data.table["col"] = int(Spinbox_col.get())
+        data.table["row"] = int(Spinbox_row.get())
         data.sbd_from = int(Spinbox_SBD_from.get())
         data.sbd_to = int(Spinbox_SBD_to.get())
         data.distance = int(Spinbox_distance.get())
+        print(data.distance)
         #print(DataToCreate.table)
     if check:
         Button_run.config(state=NORMAL, bootstyle=SUCCESS)
@@ -569,7 +565,7 @@ Label_row = ttk.Label(Label_frame_info, text="Số hàng:", bootstyle=INFO)
 Label_row.grid(row=2, column=0, padx=2, pady=2, sticky=W)
 
 Spinbox_row = ttk.Spinbox(Label_frame_info, name="sbdrow", from_=1, to=1000, width=5, bootstyle=LIGHT)
-Spinbox_row.set(5)
+Spinbox_row.set(6)
 Spinbox_row.grid(row=2, column=1, padx=2, pady=2, sticky=W)
 type_only_numbers(Spinbox_row)
 
@@ -684,6 +680,7 @@ Notebook_preview.add(Frame_review_tab, text=" --- Preview --- ")
 Notebook_preview.pack(side=LEFT, fill=BOTH, expand=True)
 
 Window_main.bind("<Button-1>", on_check_all_have_type)
+Window_main.bind("<MouseWheel>", on_check_all_have_type)
 Window_main.bind("<KeyPress>", on_check_all_have_type)
 on_check_all_have_type(None)
 Window_main.mainloop()
